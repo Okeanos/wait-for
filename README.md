@@ -4,7 +4,7 @@
 
 When using this tool, you only need to pick the `wait-for` file as part of your project.
 
-[![Build Status](https://travis-ci.org/Okeanos/wait-for.svg?branch=master)](https://travis-ci.org/Okeanos/wait-for)
+[![Build Status](https://travis-ci.com/Okeanos/wait-for.svg?branch=master)](https://travis-ci.com/Okeanos/wait-for)
 
 ## Usage
 
