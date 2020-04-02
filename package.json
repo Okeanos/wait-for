@@ -4,7 +4,7 @@
   "scripts": {
     "test": "./run_tests.sh"
   },
-  "dependencies": {
+  "devDependencies": {
     "bats": "^0.4.2"
   }
 }
