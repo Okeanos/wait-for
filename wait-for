@@ -109,22 +109,22 @@ do
 done
 
 if [ "$SERVICES" = "" ] ; then
-	echoerr "Error: you need to provide at least one service to test."
-	usage 2
+  echoerr "Error: you need to provide at least one service to test."
+  usage 2
 fi
 
 for SERVICE in ${SERVICES} ; do
-	HOST=$(printf "%s\n" "$SERVICE"| cut -d : -f 1)
-	PORT=$(printf "%s\n" "$SERVICE"| cut -d : -f 2)
+  HOST=$(printf "%s\n" "$SERVICE"| cut -d : -f 1)
+  PORT=$(printf "%s\n" "$SERVICE"| cut -d : -f 2)
 
-	if [ "$HOST" = "" ] || [ "$PORT" = "" ]; then
-  	echoerr "Error: you need to provide a host and port to test."
-  	usage 2
-	fi
+  if [ "$HOST" = "" ] || [ "$PORT" = "" ]; then
+    echoerr "Error: you need to provide a host and port to test."
+    usage 2
+  fi
 
-	wait_for "$HOST" "$PORT"
+  wait_for "$HOST" "$PORT"
 done
 
 if [ $# -gt 0 ] ; then
-	exec "$@"
+  exec "$@"
 fi
