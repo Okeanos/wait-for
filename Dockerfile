@@ -1,8 +1,8 @@
 FROM node:alpine
 
-RUN apk add --no-cache bash
+RUN apk add --no-cache bash && \
+    mkdir -p /app
 
-RUN mkdir -p /app
 WORKDIR /app
 
 COPY . /app
