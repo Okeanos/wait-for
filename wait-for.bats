@@ -13,6 +13,12 @@
   [ "$output" != "success" ]
 }
 
+@test "google and bing should be immediately found" {
+  run ./wait-for google.com:80 bing.com:80 -- echo 'success'
+
+   [ "$output" = "success" ]
+}
+
 @test "nonexistent server should start command if loose option is specified" {
   run ./wait-for -q -t 1 -l noserver:9999 -- echo 'passable' 2>&1
 

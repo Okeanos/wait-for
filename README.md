@@ -9,7 +9,7 @@ When using this tool, you only need to pick the `wait-for` file as part of your 
 ## Usage
 
 ```
-wait-for host:port [-t timeout] [-- command args]
+wait-for [host:port...] [-t timeout] [-- command args]
   -q | --quiet                        Do not output any status messages
   -l | --loose                        Execute subcommand even if the test times out
   -t TIMEOUT | --timeout=timeout      Timeout in seconds, zero for no timeout
@@ -52,13 +52,32 @@ services:
       - db
 ```
 
+To wait for several containers to become available:
+
+ ```
+version: '2'
+ services:
+  db:
+    image: postgres:9.4
+
+   elk:
+    image: sebp/elk
+
+   backend:
+    build: backend
+    command: sh -c './wait-for db:5432 elk:9563 -- npm start'
+    depends_on:
+      - db
+      - elk
+```
+
 ## Testing
 
 Ironically testing is done using [bats](https://github.com/sstephenson/bats), which on the other hand is depending on [bash](https://en.wikipedia.org/wiki/Bash_(Unix_shell)).
 
     docker build -t wait-for .
     docker run -t wait-for
-    
+
 ## Note
 
 Make sure netcat is installed in your Dockerfile before running the command.

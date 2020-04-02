@@ -31,7 +31,7 @@ usage() {
   exitcode="$1"
   cat << USAGE >&2
 Usage:
-  $(basename $0) host:port [-t timeout] [-- command args]
+  $(basename $0) [host:port...] [-t timeout] [-- command args]
   -q | --quiet                        Do not output any status messages
   -l | --loose                        Execute subcommand even if the test times out
   -t TIMEOUT | --timeout=timeout      Timeout in seconds, zero for no timeout
@@ -56,24 +56,25 @@ wait_for() {
   local result
   for i in `seq $TIMEOUT` ; do
     # use a 1-second timeout, but still sleep 0.1 seconds after just to be safe
-    test_connection "$HOST" "$PORT"
+    test_connection "$1" "$2"
     result=$?
     if [ $result -eq 0 ] ; then break ; fi
     sleep 1
   done
-  [ $result -ne 0 ] && echoerr "Operation timed out"
+  [ $result -ne 0 ] && echoerr "Operation timed out waiting for $1:$2"
   if [ $result -eq 0 -o $LOOSE -eq 1 -a $# -gt 0 ] ; then
     TIMEOUT=$OLD_TIMEOUT QUIET=$OLD_QUIET PORT=$OLD_PORT HOST=$OLD_HOST LOOSE=$OLD_LOOSE exec "$@"
   fi
   exit $result
 }
 
+SERVICES=""
+
 while [ $# -gt 0 ]
 do
   case "$1" in
     *:* )
-    HOST=$(printf "%s\n" "$1"| cut -d : -f 1)
-    PORT=$(printf "%s\n" "$1"| cut -d : -f 2)
+    SERVICES="${SERVICES} $1"
     shift 1
     ;;
     -q | --quiet)
@@ -107,9 +108,23 @@ do
   esac
 done
 
-if [ "$HOST" = "" -o "$PORT" = "" ]; then
-  echoerr "Error: you need to provide a host and port to test."
-  usage 2
+if [ "$SERVICES" = "" ] ; then
+	echoerr "Error: you need to provide at least one service to test."
+	usage 2
 fi
 
-wait_for "$@"
+for SERVICE in ${SERVICES} ; do
+	HOST=$(printf "%s\n" "$SERVICE"| cut -d : -f 1)
+	PORT=$(printf "%s\n" "$SERVICE"| cut -d : -f 2)
+
+	if [ "$HOST" = "" -o "$PORT" = "" ]; then
+  	echoerr "Error: you need to provide a host and port to test."
+  	usage 2
+	fi
+
+	wait_for "$HOST" "$PORT"
+done
+
+if [ $# -gt 0 ] ; then
+	exec "$@"
+fi
