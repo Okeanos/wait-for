@@ -23,7 +23,6 @@
   run ./wait-for -q -t 1 -l noserver:9999 -- echo 'passable' 2>&1
 
   [ "$status" -eq 0 ]
-
   [ "$output" = "passable" ]
 }
 

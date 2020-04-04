@@ -23,13 +23,13 @@ conditionally_output() {
   if [ "$QUIET" -ne 1 ]; then
     "$@"
   else
-    "$@" > /dev/null 2>&1
+    "$@" >/dev/null 2>&1
   fi
 }
 
 usage() {
   exitcode="$1"
-  cat << USAGE >&2
+  cat <<USAGE >&2
 Usage:
   $(basename "$0") [host:port...] [-t timeout] [-- command args]
   -q | --quiet                        Do not output any status messages
@@ -45,7 +45,7 @@ test_connection() {
 
   # force a 1-second timeout on darwin (https://stackoverflow.com/a/20460402/2063546)
   # POSIX-compliant string inclusion test https://stackoverflow.com/a/8811800/2063546
-  if [ "${OSTYPE#*darwin*}" != "$OSTYPE" ] ; then
+  if [ "${OSTYPE#*darwin*}" != "$OSTYPE" ]; then
     conditionally_output nc -z -w 1 -G 1 "$1" "$2"
   else
     conditionally_output nc -z -w 1 "$1" "$2"
@@ -54,77 +54,84 @@ test_connection() {
 
 wait_for() {
   local result
-  for _ in $(seq $TIMEOUT) ; do
+  for _ in $(seq $TIMEOUT); do
     # use a 1-second timeout, but still sleep 0.1 seconds after just to be safe
     test_connection "$HOST" "$PORT"
     result=$?
-    if [ $result -eq 0 ] ; then break ; fi
+    if [ $result -eq 0 ]; then break; fi
     sleep 1
   done
-  [ $result -ne 0 ] && echoerr "Operation timed out waiting for $1:$2"
-  if [ $result -eq 0  ] || [ $LOOSE -eq 1  ] && [ $# -gt 0 ] ; then
-    TIMEOUT=$OLD_TIMEOUT QUIET=$OLD_QUIET PORT=$OLD_PORT HOST=$OLD_HOST LOOSE=$OLD_LOOSE exec "$@"
+  [ $result -ne 0 ] && echoerr "Operation timed out waiting for $HOST:$PORT"
+  if [ $result -eq 0 ] || [ $LOOSE -eq 1 ] && [ $# -gt 0 ]; then
+    TIMEOUT=$OLD_TIMEOUT QUIET=$OLD_QUIET PORT=$OLD_PORT HOST=$OLD_HOST LOOSE=$OLD_LOOSE
   fi
-  exit $result
+  return $result
 }
 
 SERVICES=""
 
-while [ $# -gt 0 ]
-do
+while [ $# -gt 0 ]; do
   case "$1" in
-    *:* )
+  *:*)
     SERVICES="${SERVICES} $1"
     shift 1
     ;;
-    -q | --quiet)
+  -q | --quiet)
     QUIET=1
     shift 1
     ;;
-    -l | --loose)
+  -l | --loose)
     LOOSE=1
     shift 1
     ;;
-    -t)
+  -t)
     TIMEOUT="$2"
     if [ "$TIMEOUT" = "" ]; then break; fi
     shift 2
     ;;
-    --timeout=*)
+  --timeout=*)
     TIMEOUT="${1#*=}"
     shift 1
     ;;
-    --)
+  --)
     shift
     break
     ;;
-    --help)
+  --help)
     usage 0
     ;;
-    *)
+  *)
     echoerr "Unknown argument: $1"
     usage 1
     ;;
   esac
 done
 
-if [ "$SERVICES" = "" ] ; then
+if [ "$SERVICES" = "" ]; then
   echoerr "Error: you need to provide at least one service to test."
   usage 2
 fi
 
-for SERVICE in ${SERVICES} ; do
-  HOST=$(printf "%s\n" "$SERVICE"| cut -d : -f 1)
-  PORT=$(printf "%s\n" "$SERVICE"| cut -d : -f 2)
+for SERVICE in ${SERVICES}; do
+  HOST=$(printf "%s\n" "$SERVICE" | cut -d : -f 1)
+  PORT=$(printf "%s\n" "$SERVICE" | cut -d : -f 2)
+  SUCCESS=1
 
   if [ "$HOST" = "" ] || [ "$PORT" = "" ]; then
     echoerr "Error: you need to provide a host and port to test."
     usage 2
   fi
 
-  wait_for "$@"
+  wait_for
+  if [ $? -eq 1 ]; then
+    SUCCESS=0
+  fi
 done
 
-if [ $# -gt 0 ] ; then
-  exec "$@"
+if [ $SUCCESS -eq 1 ]; then
+  if [ $# -gt 0 ]; then
+    exec "$@"
+  fi
+else
+  exit 1
 fi
