@@ -115,7 +115,7 @@ fi
 for SERVICE in ${SERVICES}; do
   HOST=$(printf "%s\n" "$SERVICE" | cut -d : -f 1)
   PORT=$(printf "%s\n" "$SERVICE" | cut -d : -f 2)
-  SUCCESS=1
+  FAILURE=0
 
   if [ "$HOST" = "" ] || [ "$PORT" = "" ]; then
     echoerr "Error: you need to provide a host and port to test."
@@ -124,14 +124,14 @@ for SERVICE in ${SERVICES}; do
 
   wait_for
   if [ $? -eq 1 ]; then
-    SUCCESS=0
+    FAILURE=1
   fi
 done
 
-if [ $SUCCESS -eq 1 ]; then
+if [ $FAILURE -eq 0 ] || [ $LOOSE -eq 1 ]; then
   if [ $# -gt 0 ]; then
     exec "$@"
   fi
-else
-  exit 1
 fi
+
+exit $FAILURE

@@ -3,6 +3,7 @@
 @test "google should be immediately found, no output other than our own" {
   run ./wait-for -q google.com:80 -- echo 'success'
 
+  [ "$status" -eq 0 ]
   [ "$output" = "success" ]
 }
 
@@ -14,9 +15,10 @@
 }
 
 @test "google and bing should be immediately found" {
-  run ./wait-for google.com:80 bing.com:80 -- echo 'success'
+  run ./wait-for -q google.com:80 bing.com:80 -- echo 'success'
 
-   [ "$output" = "success" ]
+  [ "$status" -eq 0 ]
+  [ "$output" = "success" ]
 }
 
 @test "nonexistent server should start command if loose option is specified" {
